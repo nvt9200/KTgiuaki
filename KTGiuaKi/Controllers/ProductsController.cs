@@ -7,6 +7,7 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using KTGiuaKi.Models;
+using PagedList;
 
 namespace KTGiuaKi.Controllers
 {
@@ -15,9 +16,19 @@ namespace KTGiuaKi.Controllers
         private KTgiuakiEntities db = new KTgiuakiEntities();
 
         // GET: Products
-        public ActionResult Index(string sortOrder, string searchString)
+        public ActionResult Index(string sortOrder, string currentFilter, string searchString,int? page)
         {
             ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+
+            if (searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+            ViewBag.CurrentFilter = searchString;
             var Product1 = from s in db.Products select s;
             if (!String.IsNullOrEmpty(searchString))
             {
@@ -33,8 +44,10 @@ namespace KTGiuaKi.Controllers
                     Product1 = Product1.OrderBy(s => s.Name);
                     break;
             }
-            return View(Product1.ToList());
-            var products = db.Products.Include(p => p.Category);
+            var products1 = db.Products.Include(p => p.Category);
+            int pageSize = 3;
+            int pageNumber = (page ?? 1);
+            return View(Product1.ToPagedList(pageNumber, pageSize));
         }
 
         // GET: Products/Details/5

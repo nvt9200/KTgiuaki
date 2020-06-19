@@ -7,6 +7,7 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using KTGiuaKi.Models;
+using PagedList;
 
 namespace KTGiuaKi.Controllers
 {
@@ -15,10 +16,24 @@ namespace KTGiuaKi.Controllers
         private KTgiuakiEntities db = new KTgiuakiEntities();
 
         // GET: Categories
-        public ActionResult Index(string sortOrder)
+        public ActionResult Index(string sortOrder,string currentFilter, string searchString, int? page)
         {
             ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            if (searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+            ViewBag.CurrentFilter = searchString;
             var Category1 = from s in db.Categories select s;
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                Category1 = Category1.Where(s => s.Name.Contains(searchString)
+                                       || s.Note.Contains(searchString));
+            }
             switch (sortOrder)
             {
                 case "name_desc":
@@ -28,7 +43,10 @@ namespace KTGiuaKi.Controllers
                     Category1 = Category1.OrderBy(s => s.Name);
                     break;
             }
-            return View(Category1.ToList());
+            
+            int pageSize = 3;
+            int pageNumber = (page ?? 1);
+            return View(Category1.ToPagedList(pageNumber, pageSize));
         }
 
         // GET: Categories/Details/5
